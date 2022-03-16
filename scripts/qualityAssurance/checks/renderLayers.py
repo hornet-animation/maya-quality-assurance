@@ -355,3 +355,96 @@ class MismatchedAdjustments(QualityAssurance):
         # fix connections
         cmds.disconnectAttr(delSource, delDestination)
         cmds.connectAttr(conSource, conDestination, na=True, force=True)
+
+#HORNET - new checks
+class ValidateDisplacement(QualityAssurance):
+    """Makes sure 'Ignore Displacement' is not checked in the feature overrides"""
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Displacement not ignored in Arnold Render"
+        self._message = ""
+        self._categories = ["Render Layers"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: Duplicate adjustments
+        :rtype: generator
+        """
+        disp = cmds.getAttr("defaultArnoldRenderOptions.ignoreDisplacement")
+        if disp == 1:
+            yield "Displacement set to Ignore !"
+
+
+    def _fix(self, data):
+        disp = cmds.setAttr("defaultArnoldRenderOptions.ignoreDisplacement", 1)
+
+class CheckMergeAOVs(QualityAssurance):
+    """Makes sure 'Ignore Displacement' is not checked in the feature overrides"""
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "merge AOVs must be checked"
+        self._message = "merge AOVs not checked"
+        self._categories = ["Render Layers"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: bool mergeAOVs
+        :rtype: generator
+        """
+        merge = cmds.getAttr('defaultArnoldDriver.mergeAOVs')
+        if merge == 0:
+            yield "merge AOVs not checked"
+
+
+    def _fix(self, data):
+        cmds.setAttr('defaultArnoldDriver.mergeAOVs',1)
+class SingleCamera(QualityAssurance):
+    """Validate renderable camera count for layer and <Camera> token."""
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Render Single Camera"
+        self._message = "{0} renderable cameras per layer"
+        self._categories = ["Render Layers"]
+        self._selectable = False
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: extra cameras
+        :rtype: generator
+        """
+        cameras = cmds.ls(type='camera')
+        renderer = cmds.getAttr('defaultRenderGlobals.currentRenderer').lower()
+        # handle various renderman names
+        if renderer.startswith('renderman'):
+            renderer = 'renderman'
+        file_prefix = cmds.getAttr(ImagePrefixes[renderer])
+
+        if len(cameras) > 1:
+            if re.search(cls.R_CAMERA_TOKEN, file_prefix):
+                # if there is <Camera> token in prefix and we have more then
+                # 1 camera, all is ok.
+                yield "token in prefix, all good"
+            yield ("Multiple renderable cameras found for %s: %s \n\
+                If only one camera is desired and the other cameras are unremovable,\
+                please set render camera in Deadline Submitter" %
+                cameras)
+
+        if len(cameras) == 1 and cmds.camera(cameras[0], query=True, startupCamera=True):
+            cls.log.warning("The only renderable camera is a default camera")
+
+        elif len(cameras) < 1:
+            cls.log.error("No renderable cameras found for %s " %
+                          instance.data["setMembers"])
+            return [instance.data["setMembers"]]
+

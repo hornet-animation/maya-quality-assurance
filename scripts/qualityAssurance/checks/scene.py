@@ -670,3 +670,31 @@ class EmptyNamespaces(QualityAssurance):
         """
         cmds.namespace(set=":")
         cmds.namespace(removeNamespace=namespace)
+class MayaUnits(QualityAssurance):
+    """
+    validate using correct units
+    """
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "using standard units"
+        self._message = "{0} of wrong units should be linear: cm, angular: deg"
+        self._categories = ["Scene"]
+        self._selectable = False
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: wrong units
+        :rtype: generator
+        """
+        linearunits = cmds.currentUnit(q=1, linear=1)
+        angularunits = cmds.currentUnit(q=1, angle=1)
+        yield [unit for unit in [linearunits,angularunits] if unit not in ['cm','deg']]
+
+    def _fix(self):
+        cmds.currentUnit(angle="degree")
+        current_angle = cmds.currentUnit(query=True, angle=True)
+        cmds.currentUnit(linear="centimeter")
+        current_linear = cmds.currentUnit(query=True, linear=True)

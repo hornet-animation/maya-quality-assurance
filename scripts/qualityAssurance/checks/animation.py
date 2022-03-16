@@ -333,3 +333,27 @@ class CleanAnimation(QualityAssurance):
             # remove key indices
             for i in indices[::-1]:
                 cmds.cutKey(animCurve, clear=True, index=(i, i))
+class JointsHidden(QualityAssurance):
+    """
+    validate joints are hidden
+    """
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Joints Hidden"
+        self._message = "{0} joints hidden"
+        self._categories = ["Animation", "Rigging"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: non hidden joints
+        :rtype: generator
+        """
+        joints = cmds.ls(instance, type='joint', long=True)
+        yield [j for j in joints if lib.is_visible(j, displayLayer=True)]
+    def _fix(self):
+        import maya.mel
+        mel.eval("HideJoints")
