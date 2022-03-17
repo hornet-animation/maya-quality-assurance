@@ -196,14 +196,14 @@ class NoNamespace(QualityAssurance):
         :rtype: generator
         """
 
-        nodes = cmds.ls(instance, long=True)
+        nodes = cmds.ls(geometry=True, long=True)
         yield [node for node in nodes if self.get_namespace(node)]
 
-    def _fix(self, animCurve):
+    def _fix(self):
         """
         :param str animCurve:
         """
-        nodes = cmds.ls(instance, long=True)
+        nodes = cmds.ls(geometry=True, long=True)
         spacesNodes = [node for node in nodes if self.get_namespace(node)]
         nodes = pm.ls(spacesNodes)
         for node in nodes:
