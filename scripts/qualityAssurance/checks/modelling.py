@@ -1,4 +1,5 @@
 from maya import cmds
+import pymel.core as pm
 from ..utils import QualityAssurance, reference
 
 
@@ -170,3 +171,43 @@ class DeleteAnimation(QualityAssurance):
         :param str animCurve:
         """
         cmds.delete(animCurve)
+
+class NoNamespace(QualityAssurance):
+    """Ensure the nodes don't have a namespace"""
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "No Namespaces"
+        self._message = "{0} Namespaces found"
+        self._categories = ["Modelling"]
+        self._selectable = False
+
+    def get_namespace(self,node_name):
+        # ensure only node's name (not parent path)
+        node_name = node_name.rsplit("|")[-1]
+        # ensure only namespace
+        return node_name.rpartition(":")[0]
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: list of namespaces
+        :rtype: generator
+        """
+
+        nodes = cmds.ls(instance, long=True)
+        yield [node for node in nodes if self.get_namespace(node)]
+
+    def _fix(self, animCurve):
+        """
+        :param str animCurve:
+        """
+        nodes = cmds.ls(instance, long=True)
+        spacesNodes = [node for node in nodes if self.get_namespace(node)]
+        nodes = pm.ls(spacesNodes)
+        for node in nodes:
+            namespace = node.namespace()
+            if namespace:
+                name = node.nodeName()
+                node.rename(name[len(namespace):])
