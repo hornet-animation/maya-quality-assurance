@@ -670,6 +670,7 @@ class EmptyNamespaces(QualityAssurance):
         """
         cmds.namespace(set=":")
         cmds.namespace(removeNamespace=namespace)
+# Hornet -
 class MayaUnits(QualityAssurance):
     """
     validate using correct units

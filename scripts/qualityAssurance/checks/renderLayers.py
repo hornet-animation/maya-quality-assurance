@@ -448,3 +448,25 @@ class SingleCamera(QualityAssurance):
                           instance.data["setMembers"])
             return [instance.data["setMembers"]]
 
+class Subdivision(QualityAssurance):
+    """Makes sure 'Ignore Subdivision' is not checked in the feature overrides"""
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Not Ignoring Subdivision"
+        self._message = "ignore subdiv set to {0} should be 0 "
+        self._categories = ["Render Layers"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: extra cameras
+        :rtype: generator
+        """
+        subdiv = mc.getAttr("defaultArnoldRenderOptions.ignoreSubdivision")
+        if subdiv == 1:
+            yield subdiv
+    def _fix(self):
+        mc.setAttr("defaultArnoldRenderOptions.ignoreSubdivision", 0)
