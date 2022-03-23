@@ -332,7 +332,9 @@ global proc installModule()
         for($line in $moduleContent){
             string $processedLine = `substitute "<PATH>" $line $path`;
             print("    " + $processedLine + "\n");
-            fprint $fileId ($processedLine + "\n");  
+            // Hornet: stop it from saving mod everywhere...
+            //fprint $fileId ($processedLine + "\n");  
+            warning "Hornet: Please modify and save qualityAssurance.mod manually.";
         }
         
         // print output
