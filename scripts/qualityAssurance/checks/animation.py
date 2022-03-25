@@ -352,7 +352,8 @@ class JointsHidden(QualityAssurance):
         :return: non hidden joints
         :rtype: generator
         """
-        joints = cmds.ls(instance, type='joint', long=True)
+        from pype.hosts.maya import lib
+        joints = cmds.ls(type='joint', long=True)
         yield [j for j in joints if lib.is_visible(j, displayLayer=True)]
     def _fix(self):
         import maya.mel
