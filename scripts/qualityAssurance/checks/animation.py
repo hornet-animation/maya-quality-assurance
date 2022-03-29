@@ -341,20 +341,83 @@ class JointsHidden(QualityAssurance):
         QualityAssurance.__init__(self)
 
         self._name = "Joints Hidden"
-        self._message = "{0} joints hidden"
+        self._message = "{0} joints not hidden"
         self._categories = ["Animation", "Rigging"]
         self._selectable = True
 
     # ------------------------------------------------------------------------
+
+    def is_visible(self,node,
+                displayLayer=True,
+                intermediateObject=True,
+                parentHidden=True,
+                visibility=True):
+        """Is `node` visible?
+
+        Returns whether a node is hidden by one of the following methods:
+        - The node exists (always checked)
+        - The node must be a dagNode (always checked)
+        - The node's visibility is off.
+        - The node is set as intermediate Object.
+        - The node is in a disabled displayLayer.
+        - Whether any of its parent nodes is hidden.
+
+        Roughly based on: http://ewertb.soundlinker.com/mel/mel.098.php
+
+        Returns:
+            bool: Whether the node is visible in the scene
+
+        """
+
+        # Only existing objects can be visible
+        if not cmds.objExists(node):
+            return False
+
+        # Only dagNodes can be visible
+        if not cmds.objectType(node, isAType='dagNode'):
+            return False
+
+        if visibility:
+            if not cmds.getAttr('{0}.visibility'.format(node)):
+                return False
+
+        if intermediateObject and cmds.objectType(node, isAType='shape'):
+            if cmds.getAttr('{0}.intermediateObject'.format(node)):
+                return False
+
+        if displayLayer:
+            # Display layers set overrideEnabled and overrideVisibility on members
+            if cmds.attributeQuery('overrideEnabled', node=node, exists=True):
+                override_enabled = cmds.getAttr('{}.overrideEnabled'.format(node))
+                override_visibility = cmds.getAttr('{}.overrideVisibility'.format(
+                    node))
+                if override_enabled and override_visibility:
+                    return False
+
+        if parentHidden:
+            parents = cmds.listRelatives(node, parent=True, fullPath=True)
+            if parents:
+                parent = parents[0]
+                if not is_visible(parent,
+                                displayLayer=displayLayer,
+                                intermediateObject=False,
+                                parentHidden=parentHidden,
+                                visibility=visibility):
+                    return False
+
+        return True
+
 
     def _find(self):
         """
         :return: non hidden joints
         :rtype: generator
         """
-        from pype.hosts.maya import lib
         joints = cmds.ls(type='joint', long=True)
-        yield [j for j in joints if lib.is_visible(j, displayLayer=True)]
-    def _fix(self):
+        visible = [j for j in joints if self.is_visible(j,parentHidden=False)]
+        if len(visible) > 0:
+            for joint in visible:
+                yield joint
+    def _fix(self,err):
         import maya.mel
-        mel.eval("HideJoints")
+        maya.mel.eval("HideJoints")
