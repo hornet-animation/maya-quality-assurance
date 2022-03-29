@@ -314,11 +314,18 @@ class QualityAssuranceWidget(utils.QWidget):
         Loop over all widgets and see if the check button is enabled. If this
         is the case the check function can be ran.
         """
+        reportCard = []
         for widget in self.widgets:
             if not widget.urgency.isEnabled():
                 continue
-
             widget.doFind()
+            reportCard.append(widget.check.state)
+        if 2 in reportCard:
+            print("HORNET - Failed QA")
+            os.environ['HORNET_PASSED_QA'] = '0'
+        else:
+            print("HORNET - Passed QA")
+            os.environ['HORNET_PASSED_QA'] = '1'
 
     def doFixAll(self):
         """
