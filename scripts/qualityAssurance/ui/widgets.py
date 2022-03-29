@@ -1,6 +1,6 @@
 from . import utils
 from .. import checks, collections
-
+import os
 
 class CollectionsWidget(utils.QWidget):
     currentIndexChanged = utils.Signal(unicode)
@@ -298,15 +298,17 @@ class QualityAssuranceWidget(utils.QWidget):
         # create fix all
         fixAll = utils.QPushButton(loop)
         fixAll.setFont(utils.FONT)
-        fixAll.setText("Fix All")
-        fixAll.released.connect(self.doFixAll)
+        fixAll.setText("Override QA")
+        fixAll.released.connect(self.override)
         loopLayout.addWidget(fixAll)
 
         # add checks
         self.refresh(collection)
 
     # ------------------------------------------------------------------------
-
+    def override(self):
+        os.environ['HORNET_PASSED_QA'] = '1'
+        print("HORNET - QA Overridden")
     def doFindAll(self):
         """
         Loop over all widgets and see if the check button is enabled. If this
