@@ -240,43 +240,104 @@ class UVSetMap1(QualityAssurance):
             # Get the uv set at index zero.
             name = mapping[0]
             if name != "map1":
-                invalid.append(mesh)
-
-        yield invalid
+                yield mesh
 
 
-    def _fix(self, meshes):
+    def _fix(self, mesh):
         """
         :param str animCurve:
         """
-        for mesh in meshes:
+        print(mesh)
+        # Get existing mapping of uv sets by index
+        indices = cmds.polyUVSet(mesh, query=True, allUVSetsIndices=True)
+        maps = cmds.polyUVSet(mesh, query=True, allUVSets=True)
+        mapping = dict(zip(indices, maps))
 
-            # Get existing mapping of uv sets by index
-            indices = cmds.polyUVSet(mesh, query=True, allUVSetsIndices=True)
-            maps = cmds.polyUVSet(mesh, query=True, allUVSets=True)
-            mapping = dict(zip(indices, maps))
+        # Ensure there is no uv set named map1 to avoid
+        # a clash on renaming the "default uv set" to map1
+        existing = set(maps)
+        if "map1" in existing:
+            print('existing')
+            # Find a unique name index
+            i = 2
+            while True:
+                name = "map{0}".format(i)
+                if name not in existing:
+                    break
+                i += 1
 
-            # Ensure there is no uv set named map1 to avoid
-            # a clash on renaming the "default uv set" to map1
-            existing = set(maps)
-            if "map1" in existing:
-
-                # Find a unique name index
-                i = 2
-                while True:
-                    name = "map{0}".format(i)
-                    if name not in existing:
-                        break
-                    i += 1
-
-                cmds.polyUVSet(mesh,
-                               rename=True,
-                               uvSet="map1",
-                               newUVSet=name)
-
-            # Rename the initial index to map1
-            original = mapping[0]
             cmds.polyUVSet(mesh,
-                           rename=True,
-                           uvSet=original,
-                           newUVSet="map1")
+                            rename=True,
+                            uvSet="map1",
+                            newUVSet=name)
+
+        # Rename the initial index to map1
+        original = mapping[0]
+        cmds.polyUVSet(mesh,
+                        rename=True,
+                        uvSet=original,
+                        newUVSet="map1")
+class TransformSuffix(QualityAssurance):
+    """Validates transform suffix based on the type of its children shapes.
+
+    Suffices must be:
+        - mesh:
+            _GEO (regular geometry)
+            _GES (geometry to be smoothed at render)
+            _GEP (proxy geometry; usually not to be rendered)
+            _OSD (open subdiv smooth at rendertime)
+        - nurbsCurve: _CRV
+        - nurbsSurface: _NRB
+        - locator: _LOC
+        - null/group: _GRP
+
+    .. warning::
+        This grabs the first child shape as a reference and doesn't use the
+        others in the check.
+
+    """
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Transform Suffix Naming Convention"
+        self._message = "{0} Transforms with wrong naming"
+        self._categories = ["Modelling"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: list of namespaces
+        :rtype: generator
+        """
+        SUFFIX_NAMING_TABLE = {'mesh': ["_GEO", "_GES", "_GEP", "_OSD"],
+                           'nurbsCurve': ["_CRV"],
+                           'nurbsSurface': ["_NRB"],
+                           'locator': ["_LOC"],
+                           None: ['_GRP']}
+
+        ALLOW_IF_NOT_IN_SUFFIX_TABLE = True
+        transforms = cmds.ls(sl=self._selectable,type='transform', long=True)
+        for transform in transforms:
+            shapes = cmds.listRelatives(transform,
+                                        shapes=True,
+                                        fullPath=True,
+                                        noIntermediate=True)
+
+            shape_type = cmds.nodeType(shapes[0]) if shapes else None
+
+            if shape_type in SUFFIX_NAMING_TABLE:
+                suffices = SUFFIX_NAMING_TABLE[shape_type]
+                for suffix in suffices:
+                    if not transform.upper().endswith(suffix.upper()):
+                        yield transform
+
+
+
+    def _fix(self,transforms):
+        """
+        :param str transform:
+        cant fix automatically because its impossible to know what specifically is wrong
+        """
+        print(" Incorrectly named transforms, please fix: " + transforms)
