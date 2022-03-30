@@ -1,6 +1,6 @@
 from maya import cmds
 from ..utils import QualityAssurance, reference
-
+import contextlib
 
 class DeleteNonDeformerHistory(QualityAssurance):
     """
@@ -16,6 +16,7 @@ class DeleteNonDeformerHistory(QualityAssurance):
         self._message = "{0} mesh(es) contain non-deformer history nodes"
         self._categories = ["Rigging"]
         self._selectable = True
+        self._urgency = 1
 
         self._ignoreNodeTypes = [
             "geometryFilter", "tweak", "groupParts",
@@ -229,17 +230,13 @@ class ControlSetsArnold(QualityAssurance):
     def __init__(self):
         QualityAssurance.__init__(self)
         self._name = "Control Sets Arnold Attributes"
-        self._message = "{0} sets with curve attributes"
+        self._message = "{0} sets with Arnold attributes"
         self._categories = ["Rigging"]
         self._selectable = False
     def _find(self):
         controllers_sets = [i for i in cmds.ls(sets=True) if i == "controls_SET"]
-        if not controllers_sets:
-            yield []
 
         controls = cmds.sets(controllers_sets, query=True) or []
-        if not controls:
-            yield []
 
         shapes = cmds.ls(controls,
                          dag=True,
@@ -249,24 +246,31 @@ class ControlSetsArnold(QualityAssurance):
                          noIntermediate=True)
         curves = cmds.ls(shapes, type="nurbsCurve", long=True)
 
-        invalid = list()
         for node in curves:
 
             for attribute in self.attributes:
                 if cmds.attributeQuery(attribute, node=node, exists=True):
                     plug = "{}.{}".format(node, attribute)
                     if cmds.getAttr(plug, keyable=True):
-                        invalid.append(node)
+                        yield node
                         break
 
-        yield invalid
 
     def _fix(self, instance):
 
         invalid = self._find()
-        with lib.undo_chunk():
+        with undo_chunk():
             for node in invalid:
                 for attribute in self.attributes:
                     if cmds.attributeQuery(attribute, node=node, exists=True):
                         plug = "{}.{}".format(node, attribute)
                         cmds.setAttr(plug, channelBox=False, keyable=False)
+
+@contextlib.contextmanager
+def undo_chunk():
+    """Open a undo chunk during context."""
+    try:
+        cmds.undoInfo(openChunk=True)
+        yield
+    finally:
+        cmds.undoInfo(closeChunk=True)
