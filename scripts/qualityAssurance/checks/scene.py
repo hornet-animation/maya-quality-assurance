@@ -266,6 +266,12 @@ class UnknownNodes(QualityAssurance):
         unknownNodes = self.ls(type="unknown")
         unknownNodes = reference.removeReferenced(unknownNodes)
 
+        # Hornet: add Turtle to unknown even if Turtle plugin is loaded
+        turtle_types = ['ilrOptionsNode', 'ilrUIOptionsNode', 'ilrBakeLayerManager', 'ilrBakeLayer']
+        turtles = cmds.ls(type=turtle_types)
+        if turtles:
+            unknownNodes = unknownNodes + turtles
+
         for unknownNode in unknownNodes:
             yield unknownNode
 
@@ -700,3 +706,30 @@ class MayaUnits(QualityAssurance):
         current_angle = cmds.currentUnit(query=True, angle=True)
         cmds.currentUnit(linear="centimeter")
         current_linear = cmds.currentUnit(query=True, linear=True)
+
+class UnknownPlugins(QualityAssurance):
+    """
+    exposes and fixes nodes from unknown plugins
+    """
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Unknown Plugins"
+        self._message = "{0} nodes from unknown plugins"
+        self._categories = ["Scene"]
+        self._selectable = False
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: nodes of unknown origin
+        :rtype: generator
+        """
+        unknowns = cmds.unknownPlugin(q=1, l=1)
+        if unknowns:
+            yield unknowns
+            
+    def _fix(self,nodes):
+        for plug in nodes:
+            cmds.unknownPlugin(plug, r=1)
