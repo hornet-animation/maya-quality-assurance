@@ -443,6 +443,7 @@ class EmptyTransform(QualityAssurance):
         self._message = "{0} transform(s) are empty"
         self._categories = ["Scene"]
         self._selectable = True
+        self._urgency = 1
 
     # ------------------------------------------------------------------------
 
