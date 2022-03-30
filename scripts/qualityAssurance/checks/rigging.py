@@ -124,7 +124,7 @@ class ControlSets(QualityAssurance):
             "scaleY": 1,
             "scaleZ": 1
         }
-    def _find(cls):
+    def _find(self):
 
         controllers_sets = [i for i in cmds.ls(sets=True) if i == "controls_SET"]
         controls = cmds.sets(controllers_sets, query=True)
@@ -214,13 +214,10 @@ class ControlSetsArnold(QualityAssurance):
     This validator will ensure they are hidden or unkeyable attributes.
 
     """
-    order = pype.api.ValidateContentsOrder + 0.05
-    label = "Rig Controllers (Arnold Attributes)"
-    hosts = ["maya"]
-    families = ["rig"]
-    actions = [pype.api.RepairAction,
-               pype.hosts.maya.action.SelectInvalidAction]
-
+    _name = "Control Sets Arnold Attributes"
+    _message = "{0} arnold attributes not hidden or unkeyable"
+    _categories = ["Rigging"]
+    _selectable = False
     attributes = [
         "rcurve",
         "cwdth",
@@ -255,7 +252,7 @@ class ControlSetsArnold(QualityAssurance):
         invalid = list()
         for node in curves:
 
-            for attribute in cls.attributes:
+            for attribute in self.attributes:
                 if cmds.attributeQuery(attribute, node=node, exists=True):
                     plug = "{}.{}".format(node, attribute)
                     if cmds.getAttr(plug, keyable=True):
@@ -264,12 +261,12 @@ class ControlSetsArnold(QualityAssurance):
 
         yield invalid
 
-    def _fix(cls, instance):
+    def _fix(self, instance):
 
         invalid = self._find()
         with lib.undo_chunk():
             for node in invalid:
-                for attribute in cls.attributes:
+                for attribute in self.attributes:
                     if cmds.attributeQuery(attribute, node=node, exists=True):
                         plug = "{}.{}".format(node, attribute)
                         cmds.setAttr(plug, channelBox=False, keyable=False)

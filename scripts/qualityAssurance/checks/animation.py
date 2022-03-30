@@ -398,7 +398,7 @@ class JointsHidden(QualityAssurance):
             parents = cmds.listRelatives(node, parent=True, fullPath=True)
             if parents:
                 parent = parents[0]
-                if not is_visible(parent,
+                if not self.is_visible(parent,
                                 displayLayer=displayLayer,
                                 intermediateObject=False,
                                 parentHidden=parentHidden,
@@ -414,7 +414,7 @@ class JointsHidden(QualityAssurance):
         :rtype: generator
         """
         joints = cmds.ls(type='joint', long=True)
-        visible = [j for j in joints if self.is_visible(j,parentHidden=False)]
+        visible = [j for j in joints if self.is_visible(j,parentHidden=True)]
         if len(visible) > 0:
             for joint in visible:
                 yield joint
