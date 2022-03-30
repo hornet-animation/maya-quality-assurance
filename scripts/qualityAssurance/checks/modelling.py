@@ -196,14 +196,22 @@ class NoNamespace(QualityAssurance):
         :rtype: generator
         """
 
-        nodes = cmds.ls(geometry=True, long=True)
-        yield [node for node in nodes if self.get_namespace(node)]
+        nodes = cmds.ls(long=True)
+        for node in nodes:
+            if self.get_namespace(node): yield node
+        namespaces = cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
+        if len(namespaces) > 2:
+            #default namespace components cant be merged back
+            namespaces.remove('UI')
+            namespaces.remove('shared')
+            for nspace in namespaces:
+                yield nspace
 
-    def _fix(self):
+    def _fix(self,node):
         """
         :param str animCurve:
         """
-        nodes = cmds.ls(geometry=True, long=True)
+        nodes = cmds.ls(long=True)
         spacesNodes = [node for node in nodes if self.get_namespace(node)]
         nodes = pm.ls(spacesNodes)
         for node in nodes:
@@ -211,7 +219,12 @@ class NoNamespace(QualityAssurance):
             if namespace:
                 name = node.nodeName()
                 node.rename(name[len(namespace):])
-
+        namespaces = cmds.namespaceInfo(listOnlyNamespaces=True, recurse=True)
+        if 'UI' in namespaces or 'shared' in namespaces:
+            namespaces.remove('UI')
+            namespaces.remove('shared')
+        for nspace in namespaces:
+            cmds.namespace( removeNamespace=nspace, mergeNamespaceWithRoot=True)
 class UVSetMap1(QualityAssurance):
     """Ensure meshes have the default UV set"""
     def __init__(self):
