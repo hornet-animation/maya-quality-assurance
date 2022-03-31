@@ -216,6 +216,7 @@ class CheckWidget(utils.QWidget):
         to update the ui.
         """
         self.check.fix()
+        self.check.find()
         self.refresh()
 
     # ------------------------------------------------------------------------
