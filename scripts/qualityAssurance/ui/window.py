@@ -1,5 +1,6 @@
 from . import utils, widgets
-
+from .. import collections
+import os
 
 class QualityAssuranceWindow(utils.QWidget):
     def __init__(self, parent, collection):
@@ -13,7 +14,10 @@ class QualityAssuranceWindow(utils.QWidget):
         self.setWindowIcon(
             utils.QIcon(utils.getIconPath("QA_icon.png"))
         )
-        self.resize(700, 1080)
+        self.resize(500, 500)
+        overview = collections.getCollectionsCategories()
+        if os.environ['AVALON_TASK'] and os.environ['AVALON_TASK'] in overview:
+            collection = os.environ['AVALON_TASK']
 
         # create layout
         layout = utils.QVBoxLayout(self)
@@ -32,6 +36,6 @@ class QualityAssuranceWindow(utils.QWidget):
         self.collections.currentIndexChanged.connect(self.container.refresh)
 
 
-def show(collection="modelling"):
+def show(collection="MDL"):
     qa = QualityAssuranceWindow(utils.mayaWindow(), collection)
     qa.show()

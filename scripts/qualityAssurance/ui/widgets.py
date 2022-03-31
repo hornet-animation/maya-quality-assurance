@@ -15,7 +15,6 @@ class CollectionsWidget(utils.QWidget):
 
         # create combobox
         overview = collections.getCollectionsCategories()
-
         self.collection = utils.QComboBox(self)
         self.collection.addItems(overview)
         self.collection.setCurrentIndex(
@@ -25,9 +24,7 @@ class CollectionsWidget(utils.QWidget):
         )
         self.collection.currentIndexChanged.connect(self.trigger)
         self.collection.setFont(utils.FONT)
-        if os.environ['AVALON_TASK'] and os.environ['AVALON_TASK'] in overview:
-            dex = self.collection.findText(os.environ['AVALON_TASK'])
-            self.collection.setCurrentIndex(dex)
+        
         layout.addWidget(self.collection)
 
     # ------------------------------------------------------------------------
