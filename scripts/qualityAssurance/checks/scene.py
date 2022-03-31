@@ -279,9 +279,7 @@ class UnknownNodes(QualityAssurance):
         """
         :param str node:
         """
-        if cmds.lockNode(node, query=True, lock=True)[0]:
-            cmds.lockNode(node, lock=False)
-
+        cmds.lockNode(node, lock=False)
         cmds.delete(node)
 
 
@@ -699,9 +697,12 @@ class MayaUnits(QualityAssurance):
         """
         linearunits = cmds.currentUnit(q=1, linear=1)
         angularunits = cmds.currentUnit(q=1, angle=1)
-        yield [unit for unit in [linearunits,angularunits] if unit not in ['cm','deg']]
+        for unit in [linearunits,angularunits]:
+            if unit not in ['cm','deg']:
+                print("wrong unit - " + unit + "should be cm or deg")
+                yield unit
 
-    def _fix(self):
+    def _fix(self,error):
         cmds.currentUnit(angle="degree")
         current_angle = cmds.currentUnit(query=True, angle=True)
         cmds.currentUnit(linear="centimeter")
@@ -715,7 +716,7 @@ class UnknownPlugins(QualityAssurance):
         QualityAssurance.__init__(self)
 
         self._name = "Unknown Plugins"
-        self._message = "{0} nodes from unknown plugins"
+        self._message = "{0} unknown plugins"
         self._categories = ["Scene"]
         self._selectable = False
 
@@ -728,8 +729,12 @@ class UnknownPlugins(QualityAssurance):
         """
         unknowns = cmds.unknownPlugin(q=1, l=1)
         if unknowns:
-            yield unknowns
+            for plugin in unknowns:
+                yield plugin
             
     def _fix(self,nodes):
+        # If nodes associated with the unknown plugin aren't deleted,
+        # Maya can't remove the unknown plugin
+        cmds.delete(cmds.ls(type="unknown"))
         for plug in nodes:
             cmds.unknownPlugin(plug, r=1)

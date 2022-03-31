@@ -1,6 +1,6 @@
 from maya import cmds
 from ..utils import QualityAssurance, reference
-
+import re
 
 class MissingAdjustments(QualityAssurance):
     """
@@ -390,7 +390,7 @@ class CheckMergeAOVs(QualityAssurance):
         self._name = "merge AOVs must be checked"
         self._message = "merge AOVs not checked"
         self._categories = ["Render Layers"]
-        self._selectable = True
+        self._selectable = False
 
     # ------------------------------------------------------------------------
 
@@ -415,6 +415,14 @@ class SingleCamera(QualityAssurance):
         self._message = "{0} renderable cameras per layer"
         self._categories = ["Render Layers"]
         self._selectable = False
+        self.ImagePrefixes = {
+            'mentalray': 'defaultRenderGlobals.imageFilePrefix',
+            'vray': 'vraySettings.fileNamePrefix',
+            'arnold': 'defaultRenderGlobals.imageFilePrefix',
+            'renderman': 'defaultRenderGlobals.imageFilePrefix',
+            'redshift': 'defaultRenderGlobals.imageFilePrefix'
+        }
+        self.R_CAMERA_TOKEN = re.compile(r'%c|<camera>', re.IGNORECASE)
 
     # ------------------------------------------------------------------------
 
@@ -428,10 +436,10 @@ class SingleCamera(QualityAssurance):
         # handle various renderman names
         if renderer.startswith('renderman'):
             renderer = 'renderman'
-        file_prefix = cmds.getAttr(ImagePrefixes[renderer])
+        file_prefix = cmds.getAttr(self.ImagePrefixes[renderer])
 
         if len(cameras) > 1:
-            if re.search(cls.R_CAMERA_TOKEN, file_prefix):
+            if re.search(self.R_CAMERA_TOKEN, file_prefix):
                 # if there is <Camera> token in prefix and we have more then
                 # 1 camera, all is ok.
                 yield "token in prefix, all good"
@@ -441,13 +449,10 @@ class SingleCamera(QualityAssurance):
                 cameras)
 
         if len(cameras) == 1 and cmds.camera(cameras[0], query=True, startupCamera=True):
-            cls.log.warning("The only renderable camera is a default camera")
+            yield("The only renderable camera is a default camera")
 
         elif len(cameras) < 1:
-            cls.log.error("No renderable cameras found for %s " %
-                          instance.data["setMembers"])
-            return [instance.data["setMembers"]]
-
+            yield "no renderable camera found"
 class Subdivision(QualityAssurance):
     """Makes sure 'Ignore Subdivision' is not checked in the feature overrides"""
     def __init__(self):

@@ -1,8 +1,8 @@
-import sys
+import sys, os
 import traceback
 from maya import cmds, OpenMaya
 from . import decorators, undo, path
-
+import pymel.util as pu
 
 class QualityAssurance(object):
     """
@@ -106,6 +106,7 @@ class QualityAssurance(object):
         error list.
         """
         # check if is fixable
+        import os
         if not self.isFindable():
             raise RuntimeError(
                 "{0} doesn't allow for error finding!".format(self.name)

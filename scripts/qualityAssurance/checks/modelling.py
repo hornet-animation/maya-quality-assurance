@@ -1,6 +1,7 @@
 from maya import cmds
 import pymel.core as pm
 from ..utils import QualityAssurance, reference
+import re
 
 
 class FreezeTransforms(QualityAssurance):
@@ -354,3 +355,69 @@ class TransformSuffix(QualityAssurance):
         cant fix automatically because its impossible to know what specifically is wrong
         """
         print(" Incorrectly named transforms, please fix: " + transforms)
+
+
+class DefaultShapeNames(QualityAssurance):
+    """Validates that Shape names are using Maya's default format.
+
+    When you create a new polygon cube Maya will name the transform
+    and shape respectively:
+    - ['pCube1', 'pCubeShape1']
+    If you rename it to `bar1` it will become:
+    - ['bar1', 'barShape1']
+    Then if you rename it to `bar` it will become:
+    - ['bar', 'barShape']
+    Rename it again to `bar1` it will differ as opposed to before:
+    - ['bar1', 'bar1Shape']
+    Note that bar1Shape != barShape1
+    Thus the suffix number can be either in front of Shape or behind it.
+    Then it becomes harder to define where what number should be when a
+    node contains multiple shapes, for example with many controls in
+    rigs existing of multiple curves.
+
+    """
+
+
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Using Default Shape Naming Format"
+        self._message = "{0} shape not in default convention"
+        self._categories = ["Modelling"]
+        self._selectable = True
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: shape nodes with wrong format
+        :rtype: generator
+        """
+        shapes = cmds.ls(shapes=True, long=True)
+        for shape in shapes:
+            transform = cmds.listRelatives(shape, parent=True, fullPath=True)[0]
+
+            transform_name = short_name(transform)
+            shape_name = short_name(shape)
+
+            # A Shape's name can be either {transform}{numSuffix}
+            # Shape or {transform}Shape{numSuffix}
+            # Upon renaming nodes in Maya that is
+            # the pattern Maya will act towards.
+            transform_no_num = transform_name.rstrip("0123456789")
+            pattern = '^{transform}[_]*[0-9]*Shape[0-9]*$'.format(
+                transform=transform_no_num)
+
+            if not re.match(pattern, shape_name):
+                yield shape_name
+
+
+
+
+    def _fix(self,shapes):
+        """
+        """
+        print("incorrectly names shapes: " + shapes)
+
+def short_name(node):
+    return node.rsplit("|", 1)[-1].rsplit(":", 1)[-1]
