@@ -270,7 +270,7 @@ class UnknownNodes(QualityAssurance):
         turtle_types = ['ilrOptionsNode', 'ilrUIOptionsNode', 'ilrBakeLayerManager', 'ilrBakeLayer']
         turtles = cmds.ls(type=turtle_types)
         if turtles:
-            unknownNodes = unknownNodes + turtles
+            unknownNodes = list(unknownNodes) + turtles
 
         for unknownNode in unknownNodes:
             yield unknownNode
@@ -736,5 +736,37 @@ class UnknownPlugins(QualityAssurance):
         # If nodes associated with the unknown plugin aren't deleted,
         # Maya can't remove the unknown plugin
         cmds.delete(cmds.ls(type="unknown"))
-        for plug in nodes:
-            cmds.unknownPlugin(plug, r=1)
+        unknowns = cmds.unknownPlugin(q=1, l=1)
+        for plug in unknowns:
+            try:
+                cmds.unknownPlugin(plug, r=1)
+            except:
+                pass
+
+class UnknownReferenceNodes(QualityAssurance):
+    """
+    exposes and fixes nodes from unknown refs
+    """
+    def __init__(self):
+        QualityAssurance.__init__(self)
+
+        self._name = "Unknown Reference Nodes"
+        self._message = "{0} unknown reference nodes"
+        self._categories = ["Scene"]
+        self._selectable = False
+
+    # ------------------------------------------------------------------------
+
+    def _find(self):
+        """
+        :return: nodes of unknown origin
+        :rtype: generator
+        """
+        unknowns = cmds.ls(type='reference')
+        for unknown in unknowns:
+            if unknown.startswith('_UNKNOWN_REF_NODE'):
+                yield unknown
+    def _fix(self,node):
+        # If nodes associated with the unknown plugin aren't deleted,
+        # Maya can't remove the unknown plugin
+        cmds.delete(node)
