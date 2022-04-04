@@ -210,7 +210,12 @@ class NoNamespace(QualityAssurance):
         """
         :param str animCurve:
         """
-        cmds.namespace( removeNamespace=nspace, mergeNamespaceWithRoot=True)
+        name_space = [item for item in cmds.namespaceInfo(lon=True, recurse=True) if item not in ["UI", "shared"]]
+        # Sort them from child to parent, That's order we need to delete
+        sorted_ns_namespace = sorted(name_space, key=lambda ns: ns.count(':'), reverse=True)
+
+        for ns in sorted_ns_namespace:
+            cmds.namespace(removeNamespace=ns, mergeNamespaceWithParent=True)
 class UVSetMap1(QualityAssurance):
     """Ensure meshes have the default UV set"""
     def __init__(self):
