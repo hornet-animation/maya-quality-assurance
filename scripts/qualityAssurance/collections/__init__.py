@@ -13,37 +13,45 @@ COLLECTION = OrderedDict(
     [
         (
             "ANIM", [
+                "Scene",
                 "Animation",
                 "Scene"
             ]
         ),
         (
             "MDL", [
+                "Scene",
                 "Modelling",
                 "Geometry",
                 "UV",
                 "Shaders",
-                "Render Stats",
-                "Scene"
+                "Render Stats"
             ]
         ),
         (
             "RIG", [
+                "Scene",
                 "Rigging",
                 "Skinning",
                 "Shaders",
-                "Render Stats",
-                "Scene"
+                "Render Stats"
             ]
         ),
         (
             "SHD", [
+                "Scene",
                 "Shaders",
                 "Textures",
                 "UV",
                 "Render Layers",
-                "Render Stats",
-                "Scene"
+                "Render Stats"
+            ]
+        ),
+        (
+            "LGT Arnold", [
+                "Scene",
+                "Arnold",
+                "Textures"
             ]
         )
     ]
