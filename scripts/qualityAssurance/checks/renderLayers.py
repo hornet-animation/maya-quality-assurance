@@ -229,7 +229,7 @@ class MismatchedAdjustments(QualityAssurance):
         :rtype: generator
         """
         # clean references
-        references = self.ls(type="reference")
+        references = cmds.ls(type="reference")
         for reference in references:
             if (
                 reference.count("sharedReferenceNode")
@@ -415,6 +415,7 @@ class SingleCamera(QualityAssurance):
         self._message = "{0} renderable cameras per layer"
         self._categories = ["Render Layers"]
         self._selectable = False
+        self._urgency = 1
         self.ImagePrefixes = {
             'mentalray': 'defaultRenderGlobals.imageFilePrefix',
             'vray': 'vraySettings.fileNamePrefix',
@@ -431,27 +432,26 @@ class SingleCamera(QualityAssurance):
         :return: extra cameras
         :rtype: generator
         """
-        cameras = cmds.ls(type='camera')
+        self._message = "{0} renderable cameras"
+        cameras = [c for c in cmds.ls(cameras=True) if not cmds.camera(c, q=True, startupCamera=True)]
         renderer = cmds.getAttr('defaultRenderGlobals.currentRenderer').lower()
         # handle various renderman names
         if renderer.startswith('renderman'):
             renderer = 'renderman'
-        file_prefix = cmds.getAttr(self.ImagePrefixes[renderer])
+        file_prefix = cmds.getAttr(self.ImagePrefixes[renderer]) or ''
 
         if len(cameras) > 1:
-            if re.search(self.R_CAMERA_TOKEN, file_prefix):
+            if not re.search(self.R_CAMERA_TOKEN, file_prefix):
                 # if there is <Camera> token in prefix and we have more then
                 # 1 camera, all is ok.
-                yield "token in prefix, all good"
-            yield ("Multiple renderable cameras found for %s: %s \n\
-                If only one camera is desired and the other cameras are unremovable,\
+                for camera in cameras:
+                    yield camera
+            print("Multiple renderable cameras found for %s:  \n\
+                If only one camera is desired \
                 please set render camera in Deadline Submitter" %
                 cameras)
-
-        if len(cameras) == 1 and cmds.camera(cameras[0], query=True, startupCamera=True):
-            yield("The only renderable camera is a default camera")
-
         elif len(cameras) < 1:
+            self._message = "no renderable camera found"
             yield "no renderable camera found"
 class Subdivision(QualityAssurance):
     """Makes sure 'Ignore Subdivision' is not checked in the feature overrides"""
@@ -470,8 +470,8 @@ class Subdivision(QualityAssurance):
         :return: extra cameras
         :rtype: generator
         """
-        subdiv = mc.getAttr("defaultArnoldRenderOptions.ignoreSubdivision")
+        subdiv = cmds.getAttr("defaultArnoldRenderOptions.ignoreSubdivision")
         if subdiv == 1:
             yield subdiv
     def _fix(self):
-        mc.setAttr("defaultArnoldRenderOptions.ignoreSubdivision", 0)
+        cmds.setAttr("defaultArnoldRenderOptions.ignoreSubdivision", 0)
