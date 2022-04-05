@@ -494,8 +494,8 @@ class EmptyTransform(QualityAssurance):
             # append to error list
             if appendToError:
                 errors.append(transform)
-                yield transform
-
+        for transform in errors:
+            yield transform
     def _fix(self, transform):
         """
         :param str transform:
