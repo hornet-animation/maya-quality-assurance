@@ -376,6 +376,13 @@ class DefaultShapeNames(QualityAssurance):
         self._categories = ["Modelling"]
         self._selectable = True
 
+    def _define_default_name(self, shape):
+        parent = cmds.listRelatives(shape, parent=True, fullPath=True)[0]
+        transform = parent.rsplit("|", 1)[-1].rsplit(":", 1)[-1]
+
+
+        return '{0}Shape'.format(transform)
+
     # ------------------------------------------------------------------------
 
     def _find(self):
@@ -383,7 +390,7 @@ class DefaultShapeNames(QualityAssurance):
         :return: shape nodes with wrong format
         :rtype: generator
         """
-        shapes = cmds.ls(shapes=True, long=True)
+        shapes = [shape for shape in cmds.ls(shapes=True, long=True) if 'displayPoint' not in shape]
         for shape in shapes:
             transform = cmds.listRelatives(shape, parent=True, fullPath=True)[0]
 
@@ -404,10 +411,8 @@ class DefaultShapeNames(QualityAssurance):
 
 
 
-    def _fix(self,shapes):
-        """
-        """
-        print("incorrectly names shapes: " + shapes)
+    def _fix(self,shape):
+        cmds.rename(shape, self._define_default_name(shape))
 
 def short_name(node):
     return node.rsplit("|", 1)[-1].rsplit(":", 1)[-1]
