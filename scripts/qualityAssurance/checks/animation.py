@@ -14,6 +14,7 @@ class NotConnectedAnimation(QualityAssurance):
         self._message = "{0} animation curve(s) are unused"
         self._categories = ["Animation"]
         self._selectable = True
+        self._urgency = True
 
     # ------------------------------------------------------------------------
 
@@ -193,6 +194,7 @@ class CleanAnimation(QualityAssurance):
         self._message = "{0} animation curve(s) have unnecessary key(s)"
         self._categories = ["Animation"]
         self._selectable = True
+        self._urgency = True
 
     # ------------------------------------------------------------------------
 

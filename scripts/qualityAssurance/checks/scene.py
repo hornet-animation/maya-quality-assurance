@@ -13,7 +13,7 @@ class DefaultName(QualityAssurance):
         QualityAssurance.__init__(self)
 
         self._name = "Default Names"
-        self._urgency = 1
+        self._urgency = True
         self._message = "{0} transform(s) have a default name"
         self._categories = ["Scene"]
         self._selectable = True
@@ -74,7 +74,7 @@ class NamingConvention(QualityAssurance):
         QualityAssurance.__init__(self)
 
         self._name = "Naming Convention"
-        self._urgency = 1
+        self._urgency = True
         self._message = "{0} node(s) don't follow the naming convention"
         self._categories = ["Scene"]
         self._selectable = True
@@ -447,7 +447,7 @@ class EmptyTransform(QualityAssurance):
         self._message = "{0} transform(s) are empty"
         self._categories = ["Scene"]
         self._selectable = True
-        self._urgency = 1
+        self._urgency = True
 
     # ------------------------------------------------------------------------
 

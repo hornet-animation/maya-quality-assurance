@@ -14,7 +14,7 @@ class QualityAssuranceWindow(utils.QWidget):
         self.setWindowIcon(
             utils.QIcon(utils.getIconPath("QA_icon.png"))
         )
-        self.resize(500, 500)
+        self.resize(700, 700)
         overview = collections.getCollectionsCategories()
         if os.environ['AVALON_TASK'] and os.environ['AVALON_TASK'] in overview:
             collection = os.environ['AVALON_TASK']

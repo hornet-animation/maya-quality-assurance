@@ -94,7 +94,7 @@ class DeleteHistory(QualityAssurance):
         self._message = "{0} mesh(es) contain history nodes"
         self._categories = ["Modelling"]
         self._selectable = True
-        self._urgency = 1
+        self._urgency = True
 
         self._ignoreNodes = [
             "tweak", "groupParts", "groupId",

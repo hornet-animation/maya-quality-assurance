@@ -42,6 +42,7 @@ class InitialShadingGroup(QualityAssurance):
         self._message = "{0} object(s) are connected to the initial shading group"
         self._categories = ["Shaders"]
         self._selectable = True
+        self._urgency = 1
 
     # ------------------------------------------------------------------------
 

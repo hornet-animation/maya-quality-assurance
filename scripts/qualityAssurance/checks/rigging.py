@@ -16,7 +16,7 @@ class DeleteNonDeformerHistory(QualityAssurance):
         self._message = "{0} mesh(es) contain non-deformer history nodes"
         self._categories = ["Rigging"]
         self._selectable = True
-        self._urgency = 1
+        self._urgency = True
 
         self._ignoreNodeTypes = [
             "geometryFilter", "tweak", "groupParts",
@@ -109,12 +109,14 @@ class ControlSets(QualityAssurance):
     """
     def __init__(self):
         QualityAssurance.__init__(self)
-        self._name = "Control Sets layout"
+        self._name = "Controllers Zero Transform"
         self._message = "{0} sets misconfigured"
         self._categories = ["Rigging"]
         self._selectable = False
+        self._urgency = True
+        
         # Default controller values
-        CONTROLLER_DEFAULTS = {
+        self.CONTROLLER_DEFAULTS = {
             "translateX": 0,
             "translateY": 0,
             "translateZ": 0,
