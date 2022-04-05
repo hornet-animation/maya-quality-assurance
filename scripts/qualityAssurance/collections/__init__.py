@@ -43,7 +43,6 @@ COLLECTION = OrderedDict(
                 "Shaders",
                 "Textures",
                 "UV",
-                "Render Layers",
                 "Render Stats"
             ]
         ),
