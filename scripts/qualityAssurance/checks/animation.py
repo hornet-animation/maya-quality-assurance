@@ -335,6 +335,8 @@ class CleanAnimation(QualityAssurance):
             # remove key indices
             for i in indices[::-1]:
                 cmds.cutKey(animCurve, clear=True, index=(i, i))
+
+
 class JointsHidden(QualityAssurance):
     """
     validate joints are hidden
@@ -353,7 +355,8 @@ class JointsHidden(QualityAssurance):
                 displayLayer=True,
                 intermediateObject=True,
                 parentHidden=True,
-                visibility=True):
+                visibility=True,
+                drawStyle=True):
         """Is `node` visible?
 
         Returns whether a node is hidden by one of the following methods:
@@ -396,6 +399,14 @@ class JointsHidden(QualityAssurance):
                 if override_enabled and override_visibility:
                     return False
 
+        if drawStyle:
+            # joints have "draw style" attr which can hide the joint when set to "none"
+            # only affects the joint itself, not its children
+            if cmds.attributeQuery('drawStyle', node=node, exists=True):
+                # enum attr, 0=bone, 1=multi-child as box, 2=none
+                if cmds.getAttr('{}.drawStyle'.format(node)) == 2:
+                    return False
+
         if parentHidden:
             parents = cmds.listRelatives(node, parent=True, fullPath=True)
             if parents:
@@ -404,11 +415,11 @@ class JointsHidden(QualityAssurance):
                                 displayLayer=displayLayer,
                                 intermediateObject=False,
                                 parentHidden=parentHidden,
-                                visibility=visibility):
+                                visibility=visibility,
+                                drawStyle=True):
                     return False
 
         return True
-
 
     def _find(self):
         """
@@ -420,6 +431,7 @@ class JointsHidden(QualityAssurance):
         if len(visible) > 0:
             for joint in visible:
                 yield joint
+    
     def _fix(self,err):
         import maya.mel
         maya.mel.eval("HideJoints")
