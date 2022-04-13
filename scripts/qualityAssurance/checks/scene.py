@@ -626,9 +626,6 @@ class NonReferencedNamespace(QualityAssurance):
                 isNamespaceMatrix = [ re.match(asset + '_*[0-9]*_*',path.namespace(node)) for asset in assetsInScene]
                 if any(isNamespaceMatrix):
                     continue
-                print(assetsInScene)
-                print(path.namespace(node))
-                print(isNamespaceMatrix)
                 yield node
 
     def _fix(self, node):
