@@ -588,7 +588,7 @@ class NonReferencedNamespace(QualityAssurance):
         self._name = "Non Referenced Namespaces"
         self._message = "{0} node(s) have a non-referenced namespace"
         self._categories = ["Scene"]
-        self._selectable = False
+        self._selectable = True
 
     # ------------------------------------------------------------------------
 
@@ -599,10 +599,36 @@ class NonReferencedNamespace(QualityAssurance):
         """
         nodes = self.ls(l=True)
         nodes = reference.removeReferenced(nodes)
+        objectset = cmds.ls("*.id", long=True, type="objectSet",
+                            recursive=True, objectsOnly=True)
+        assetsInScene = []
+        for objset in objectset:
+
+            if not cmds.attributeQuery("id", node=objset, exists=True):
+                continue
+
+            id_attr = "{}.id".format(objset)
+            if cmds.getAttr(id_attr) != "pyblish.avalon.instance":
+                continue
+
+            # The developer is responsible for specifying
+            # the family of each instance.
+            has_family = cmds.attributeQuery("family",
+                                             node=objset,
+                                             exists=True)
+            if has_family:
+                assetName = cmds.getAttr(objset+'.asset')
+                assetsInScene.append(assetName)
 
         for node in nodes:
             root = path.rootName(node)
             if root.find(":") != -1:
+                isNamespaceMatrix = [ re.match(asset + '_*[0-9]*_*',path.namespace(node)) for asset in assetsInScene]
+                if any(isNamespaceMatrix):
+                    continue
+                print(assetsInScene)
+                print(path.namespace(node))
+                print(isNamespaceMatrix)
                 yield node
 
     def _fix(self, node):
