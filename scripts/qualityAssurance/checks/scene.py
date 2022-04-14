@@ -619,12 +619,16 @@ class NonReferencedNamespace(QualityAssurance):
             if has_family:
                 assetName = cmds.getAttr(objset+'.asset')
                 assetsInScene.append(assetName)
-
+        # query hidden AVALON_CONTAINERS which has info about the assets brought into inventory from loader
+        # their top level group is created on import and is technically not from a ref
+        # however, we dont want to strip that namespace so we let them slide
+        containers = cmds.sets("AVALON_CONTAINERS", query=True, nodesOnly=True) or []
+        nspaces = [cmds.getAttr(cont + '.namespace') for cont in containers]
         for node in nodes:
             root = path.rootName(node)
             if root.find(":") != -1:
                 isNamespaceMatrix = [ re.match(asset + '_*[0-9]*_*',path.namespace(node)) for asset in assetsInScene]
-                if any(isNamespaceMatrix):
+                if any(isNamespaceMatrix) or path.namespace(node) in nspaces:
                     continue
                 yield node
 
