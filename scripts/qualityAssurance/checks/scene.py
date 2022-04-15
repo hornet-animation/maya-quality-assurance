@@ -622,7 +622,10 @@ class NonReferencedNamespace(QualityAssurance):
         # query hidden AVALON_CONTAINERS which has info about the assets brought into inventory from loader
         # their top level group is created on import and is technically not from a ref
         # however, we dont want to strip that namespace so we let them slide
-        containers = cmds.sets("AVALON_CONTAINERS", query=True, nodesOnly=True) or []
+        try:
+            containers = cmds.sets("AVALON_CONTAINERS", query=True, nodesOnly=True)
+        except ValueError:
+            containers = []
         nspaces = [cmds.getAttr(cont + '.namespace') for cont in containers]
         for node in nodes:
             root = path.rootName(node)
