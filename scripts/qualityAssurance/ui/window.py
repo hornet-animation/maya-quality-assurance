@@ -36,6 +36,8 @@ class QualityAssuranceWindow(utils.QWidget):
         self.collections.currentIndexChanged.connect(self.container.refresh)
 
 
-def show(collection="MDL"):
+def show(collection="MDL",autorun=False):
     qa = QualityAssuranceWindow(utils.mayaWindow(), collection)
     qa.show()
+    if autorun:
+        qa.container.doFindAll()
