@@ -34,6 +34,9 @@ class QualityAssurance(object):
         :rtype: str
         """
         return self._name
+    @name.setter
+    def name(self,nname):
+        self._name = nname
 
     @property
     @decorators.ifNoErrorsReturn(0)
@@ -47,7 +50,9 @@ class QualityAssurance(object):
         :rtype: int
         """
         return self._urgency
-
+    @state.setter
+    def state(self,nstate):
+        self._urgency = nstate
     @property
     def categories(self):
         """

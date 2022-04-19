@@ -37,6 +37,7 @@ URGENCY_STYLESHEET = {
     0: "QPushButton{ background-color: green;}",
     1: "QPushButton{ background-color: orange;}",
     2: "QPushButton{ background-color: red;}",
+    3: "QPushButton{ background-color: magenta;}"
 }
 
 CHECK_ICON = ":/checkboxOff.png"
@@ -60,7 +61,7 @@ def mayaWindow():
     """
     window = OpenMayaUI.MQtUtil.mainWindow()
     window = shiboken.wrapInstance(long(window), QMainWindow)
-    
+
     return window  
 
 

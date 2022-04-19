@@ -125,14 +125,12 @@ class CategoryWidget(utils.QWidget):
 class CheckWidget(utils.QWidget):
     def __init__(self, parent, check, number):
         utils.QWidget.__init__(self, parent)
-
         # variables
         self.check = check
         self.toolTipText = "<b>{0}</b>:<br>{1}".format(
             self.check.name,
             self.check.information
         )
-
         # create layout
         layout = utils.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -180,7 +178,7 @@ class CheckWidget(utils.QWidget):
         self.select.setMinimumSize(16, 16)
         self.select.setMaximumSize(16, 16)
         self.select.setFlat(True)
-        self.select.setIcon(utils.QIcon(utils.SELECT_ICON))
+        self.select.setIcon(utils.QIcon(utils.getIconPath('magnifying-glass-solid.svg')))
         self.select.setEnabled(False)
         self.select.released.connect(self.check.select)
         layout.addWidget(self.select)
@@ -190,7 +188,7 @@ class CheckWidget(utils.QWidget):
         self.fix.setMinimumSize(16, 16)
         self.fix.setMaximumSize(16, 16)
         self.fix.setFlat(True)
-        self.fix.setIcon(utils.QIcon(utils.getIconPath("QA_fix.png")))
+        self.fix.setIcon(utils.QIcon(utils.getIconPath("wrench-solid.svg")))
         self.fix.released.connect(self.doFix)
         self.fix.setEnabled(False)
         layout.addWidget(self.fix)
@@ -218,7 +216,7 @@ class CheckWidget(utils.QWidget):
 
     # ------------------------------------------------------------------------
 
-    def refresh(self):
+    def refresh(self, err=False):
         """
         Refresh the widget based on the current status of the check. Urgency
         indicators will be set, status text changed, selectable and fix button
@@ -227,9 +225,14 @@ class CheckWidget(utils.QWidget):
         # update urgency
         self.urgency.setIcon(utils.QIcon())
         self.urgency.setFlat(False)
-        self.urgency.setStyleSheet(
-            utils.URGENCY_STYLESHEET.get(self.check.state)
-        )
+        if not err:
+            self.urgency.setStyleSheet(
+                utils.URGENCY_STYLESHEET.get(self.check.state)
+            )
+        else:
+            self.urgency.setStyleSheet(
+                utils.URGENCY_STYLESHEET.get(3)
+            )
 
         # update status
         self.status.setText(
@@ -310,6 +313,7 @@ class QualityAssuranceWidget(utils.QWidget):
     def override(self):
         os.environ['HORNET_PASSED_QA'] = '1'
         print("HORNET - QA Overridden")
+        self.parent().close()
     def doFindAll(self):
         """
         Loop over all widgets and see if the check button is enabled. If this
@@ -319,9 +323,17 @@ class QualityAssuranceWidget(utils.QWidget):
         for widget in self.widgets:
             if not widget.urgency.isEnabled():
                 continue
-            widget.doFind()
+            try:
+                widget.doFind()
+            except Exception as e:
+                print("Hornet QA - Script error in check " + widget.check.name + " contact lead or pipeline team for help")
+                print(e)
+                widget.urgency.setEnabled(True)
+                widget.check.state = 3
+                widget.check.name = 'Validator Script Error'
+                widget.refresh(err=True)
             reportCard.append(widget.check.state)
-        if 2 in reportCard:
+        if 2 in reportCard or 3 in reportCard:
             print("HORNET - Failed QA")
             os.environ['HORNET_PASSED_QA'] = '0'
         else:
