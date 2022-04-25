@@ -800,3 +800,4 @@ class UnknownReferenceNodes(QualityAssurance):
         # If nodes associated with the unknown plugin aren't deleted,
         # Maya can't remove the unknown plugin
         cmds.delete(node)
+
